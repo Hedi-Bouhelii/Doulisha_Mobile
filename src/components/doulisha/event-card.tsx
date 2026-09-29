@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
 import { useLocale, useT } from '@/i18n';
 import { cn } from '@/lib/cn';
+import { absoluteUrl } from '@/lib/urls';
 import type { RouterOutputs } from '@/shared/web/api-types';
 import { formatEventDateTime } from '@/shared/web/i18n';
 
@@ -47,7 +48,7 @@ export function EventCard({
       <View className="aspect-[4/3] bg-muted">
         {event.coverUrl ? (
           <Image
-            source={{ uri: event.coverUrl }}
+            source={{ uri: absoluteUrl(event.coverUrl) }}
             style={{ width: '100%', height: '100%' }}
             contentFit="cover"
             transition={150}
