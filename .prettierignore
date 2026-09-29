@@ -1,0 +1,18 @@
+pnpm-lock.yaml
+src/shared/web/
+android/
+ios/
+.expo/
+dist/
+*.pdf
+# Copies of the web repository's documents, kept for reference (see docs/MOBILE_HANDOFF.md).
+/API.md
+/ARCHITECTURE.md
+/AUDIT.md
+/BUILD_PROMPT.md
+/DATABASE.md
+/DEPLOYMENT.md
+/MOBILE_HANDOFF.md
+/OPEN_QUESTIONS.md
+/SOCIAL_SIGN_IN_SETUP.md
+/UX_GUIDELINES.md
