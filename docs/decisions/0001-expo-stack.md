@@ -10,7 +10,8 @@ The web repository's build prompt makes Expo mandatory for the mobile app (secti
 ## Decision
 
 - **Expo SDK 57** (React Native 0.86, React 19.2), New Architecture and Hermes, **Expo Router** with typed routes and the React Compiler (template defaults).
-- **pnpm 12** with its default isolated `node_modules`, like the web repository. Packages the app's code reaches through a library's transform must be direct dependencies (`react-native-css-interop` for NativeWind).
+- **pnpm 12 with `nodeLinker: hoisted`** (a flat `node_modules`, as web ADR 0006 noted React Native needs). With pnpm's isolated layout, the native C++ builds (react-native-screens, worklets, expo-updates) failed on Windows because their paths passed CMake's 250-character limit, and Expo was installed twice under different peer variants. `react-native-css-interop` stays a direct dependency because NativeWind's JSX transform makes the app's own code import it.
+- **One NDK:** a small config plugin (`plugins/with-shared-ndk.js`) makes native modules that name no NDK version (expo-updates) use React Native's, instead of downloading the Android Gradle plugin's default (another 1 GB).
 - **Development builds** (`expo-dev-client`), not Expo Go: SecureStore, SQLite and, later, the camera and push notifications need native code. Native folders are generated (`npx expo prebuild`) and not committed.
 - **Build variants** from `APP_VARIANT` (`app.config.ts`): `development` (`tn.doulisha.app.dev`), `preview` (`tn.doulisha.app.preview`) and `production` (`tn.doulisha.app`, OPEN_QUESTIONS Q2 of the web). Test builds install next to the store app. All use the `doulisha://` scheme.
 - **Performance habits from the start** (the founder's concern): FlashList for lists, expo-image for pictures, Reanimated for motion, fonts embedded at build time (no loading at startup), speed measured on release builds only. Part 3d measures the budgets (event list under 2 s on throttled 4G, app under 40 MB).

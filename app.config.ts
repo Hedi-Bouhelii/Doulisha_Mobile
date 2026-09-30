@@ -87,6 +87,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-sqlite',
     'expo-web-browser',
     'expo-image',
+    './plugins/with-shared-ndk.js',
   ],
   experiments: {
     typedRoutes: true,
