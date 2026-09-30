@@ -1,0 +1,16 @@
+# A flat node_modules, as React Native needs (ADR 0001): with pnpm's isolated
+# layout, native C++ builds fail on Windows (paths over CMake's 250-character
+# limit) and Expo is installed twice under different peer variants.
+nodeLinker: hoisted
+
+# Packages allowed (true) or refused (false) to run install scripts.
+# - unrs-resolver (eslint-plugin-import) ships prebuilt binaries.
+allowBuilds:
+  unrs-resolver: false
+minimumReleaseAgeExclude:
+  - '@expo/ui@57.0.21'
+  - expo-constants@57.0.20
+  - expo-modules-core@57.0.20
+  - expo-router@57.0.24
+  - expo-updates@57.0.24
+  - expo@57.0.26
