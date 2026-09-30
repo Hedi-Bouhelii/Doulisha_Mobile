@@ -14,6 +14,7 @@ The app lives in its own repository (web ADR 0006) and cannot import the web's w
   - `packages/i18n` messages, `index.ts`, `format.ts`, `locales.ts`;
   - `packages/ui-tokens` `tokens.ts`, `contrast.ts`;
   - `packages/validators` `index.ts`, `common.ts`, `events.ts`.
+- `pnpm sync:web --ref <branch>` reads the files from that branch through git instead of the working copy, so a web fix can reach the app without switching the web repository's checked-out branch.
 - It records the web commit in `src/shared/web/SOURCE.json`, refuses uncommitted web changes (unless `--allow-dirty`), and checks that every library the API types import is installed here, so no type silently becomes `any`. `drizzle-orm` and `@neondatabase/serverless` are installed as dev dependencies for that reason only; nothing from them reaches the app bundle.
 - **Nothing in `src/shared/web/` is edited by hand**; it is excluded from ESLint and Prettier. Change the web repository, commit, then sync.
 - **App-only messages** (tab names, the restart prompt) live in `src/i18n/messages/{ar,fr,en}.json` as the `App` namespace; a test checks the three files have the same keys. Everything the web already says is reused from its messages.

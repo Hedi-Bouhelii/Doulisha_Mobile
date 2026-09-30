@@ -29,7 +29,10 @@ pnpm android        # development build on the emulator or a plugged-in phone
 pnpm start          # Metro only (the development build is already installed)
 pnpm check          # format check, lint, typecheck, tests
 pnpm sync:web       # copy the API types, messages, formatters, tokens and validators from ../dolisha
+pnpm sync:web --ref fix/some-branch   # the same, from a web branch that is not checked out
 ```
+
+On a phone plugged in over USB, `adb reverse tcp:8081 tcp:8081` and `adb reverse tcp:3000 tcp:3000` let it reach Metro and the local web server as `localhost` (set `EXPO_PUBLIC_API_URL=http://localhost:3000` in `.env.local`). After adding a library with native code, rebuild with `pnpm android`.
 
 ## Layout
 
@@ -49,4 +52,5 @@ docs/             decisions, open questions, founder tasks, handoff
 
 - [MOBILE_HANDOFF.md](MOBILE_HANDOFF.md): what the web project decided and what the app must reuse.
 - The specification, build prompt, API reference and UX guidelines are in the web repository's `docs/`.
+- [docs/UI.md](docs/UI.md): the mobile UI kit and the rules learned on a real phone.
 - [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md), [docs/FOUNDER_TASKS.md](docs/FOUNDER_TASKS.md), [CHANGELOG.md](CHANGELOG.md).
