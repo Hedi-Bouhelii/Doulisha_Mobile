@@ -18,9 +18,9 @@ export function Skeleton({ className }: { className?: string }) {
   const opacity = useSharedValue(1);
   useEffect(() => {
     if (reduceMotion) return;
-    opacity.value = withRepeat(withTiming(0.5, { duration: 700 }), -1, true);
+    opacity.set(withRepeat(withTiming(0.5, { duration: 700 }), -1, true));
   }, [opacity, reduceMotion]);
-  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  const style = useAnimatedStyle(() => ({ opacity: opacity.get() }));
   return (
     <Animated.View
       accessibilityElementsHidden
