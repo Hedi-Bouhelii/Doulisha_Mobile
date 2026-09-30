@@ -24,5 +24,12 @@
   "signOutConfirmBody": "Vous pouvez vous reconnecter à tout moment avec votre numéro ou votre e-mail.",
   "organizerSoonTitle": "Votre espace organisateur",
   "organizerSoonHint": "Le tableau de bord, les participants, les paiements et le contrôle des billets arrivent avec la prochaine mise à jour. En attendant, utilisez doulisha.vercel.app.",
-  "back": "Retour"
+  "back": "Retour",
+  "discoverTitle": "Trouvez votre prochaine sortie",
+  "hello": "Bonjour {name}",
+  "eventsCount": "{count, plural, one {# événement} other {# événements}}",
+  "preferences": "Préférences",
+  "accountSection": "Compte",
+  "memberSince": "Membre Doulisha",
+  "languageSubtitle": "L’application redémarre en passant à l’arabe ou en le quittant."
 }

@@ -24,5 +24,12 @@
   "signOutConfirmBody": "You can sign in again at any time with your phone number or email.",
   "organizerSoonTitle": "Your organizer space",
   "organizerSoonHint": "The dashboard, attendees, payments and check-in arrive with the next update. Meanwhile, use doulisha.vercel.app.",
-  "back": "Back"
+  "back": "Back",
+  "discoverTitle": "Find your next outing",
+  "hello": "Hello {name}",
+  "eventsCount": "{count, plural, one {# event} other {# events}}",
+  "preferences": "Preferences",
+  "accountSection": "Account",
+  "memberSince": "Doulisha member",
+  "languageSubtitle": "The app restarts when switching to or from Arabic."
 }

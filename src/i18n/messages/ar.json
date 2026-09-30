@@ -24,5 +24,12 @@
   "signOutConfirmBody": "يمكنك تسجيل الدخول مجددًا في أي وقت برقم هاتفك أو بريدك الإلكتروني.",
   "organizerSoonTitle": "فضاء المنظّم",
   "organizerSoonHint": "تصل لوحة القيادة والمشاركون والمدفوعات ومراقبة التذاكر مع التحديث القادم. في الأثناء، استعمل doulisha.vercel.app.",
-  "back": "رجوع"
+  "back": "رجوع",
+  "discoverTitle": "اعثر على خرجتك القادمة",
+  "hello": "مرحبًا {name}",
+  "eventsCount": "{count, plural, zero {لا فعاليات} one {فعالية واحدة} two {فعاليتان} few {# فعاليات} many {# فعالية} other {# فعالية}}",
+  "preferences": "التفضيلات",
+  "accountSection": "الحساب",
+  "memberSince": "عضو في دوليشة",
+  "languageSubtitle": "يُعاد تشغيل التطبيق عند التحويل من العربية أو إليها."
 }
