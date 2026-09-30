@@ -1,3 +1,5 @@
+import './intl-polyfills';
+
 import { getLocales } from 'expo-localization';
 import { createInstance } from 'i18next';
 import ICU from 'i18next-icu';

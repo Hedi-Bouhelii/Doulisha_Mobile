@@ -56,4 +56,13 @@ describe('messages with i18next-icu', () => {
     expect(placesLeft('fr', 3)).toContain('3');
     expect(placesLeft('ar', 2)).not.toEqual(placesLeft('ar', 11));
   });
+
+  it('agrees counts on event cards (found on the phone: "1 participants")', () => {
+    const going = (locale: 'ar' | 'fr' | 'en', count: number) =>
+      new IntlMessageFormat((web[locale].Event as Tree).going as string, locale).format({ count });
+    expect(going('fr', 1)).toBe('1 participant');
+    expect(going('fr', 16)).toBe('16 participants');
+    expect(going('ar', 1)).toBe('مشارك واحد');
+    expect(going('ar', 16)).toBe('16 مشاركًا');
+  });
 });
