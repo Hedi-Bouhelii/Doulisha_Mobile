@@ -1,8 +1,7 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 
-import { useTRPC } from '@/lib/trpc';
+import { useTRPCClient } from '@/lib/trpc';
 
 /**
  * Where to go once signed in: the setup step when the account still needs a
@@ -10,19 +9,28 @@ import { useTRPC } from '@/lib/trpc';
  */
 export function useAfterSignIn() {
   const router = useRouter();
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
+  const client = useTRPCClient();
+
+  /**
+   * Asked through the client, not the query cache: signing in refreshes every
+   * query (SessionSync), which would cancel a cached request made right now.
+   * One retry covers a slow first request after sign-in.
+   */
+  const needsSetup = useCallback(async (): Promise<boolean> => {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        return (await client.account.status.query()).needsSetup;
+      } catch {
+        // Try once more, then assume setup is needed rather than skip it.
+      }
+    }
+    return true;
+  }, [client]);
 
   return useCallback(
     async ({ checkSetup, welcome = false, accountType }: AfterSignIn) => {
-      let needsSetup = welcome;
-      if (checkSetup && !welcome) {
-        const status = await queryClient
-          .fetchQuery({ ...trpc.account.status.queryOptions(), staleTime: 0 })
-          .catch(() => null);
-        needsSetup = status?.needsSetup ?? false;
-      }
-      if (needsSetup) {
+      const setup = welcome || (checkSetup && (await needsSetup()));
+      if (setup) {
         router.replace({
           pathname: '/account-setup',
           params: {
@@ -36,7 +44,7 @@ export function useAfterSignIn() {
         router.replace('/');
       }
     },
-    [queryClient, router, trpc],
+    [needsSetup, router],
   );
 }
 

@@ -1,14 +1,16 @@
 import { useRouter } from 'expo-router';
+import { Lock } from 'lucide-react-native';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { FormError } from '@/components/ui/form-error';
-import { Text } from '@/components/ui/text';
+
 import { CodeField, TextField } from '@/components/ui/text-field';
 import { parseIdentifier, type Method } from '@/features/auth/identifier';
 import { AuthLayout, DevOutboxNote, IdentifierField, MethodSwitch } from '@/features/auth/parts';
 import { useT } from '@/i18n';
 import { authErrorKey } from '@/i18n/errors';
+import { formatPhone } from '@/lib/phone';
 import { authClient } from '@/lib/auth-client';
 
 const MIN_PASSWORD = 8;
@@ -69,14 +71,17 @@ export default function ForgotPasswordScreen() {
 
   if (sentTo) {
     return (
-      <AuthLayout title={t('resetTitle')} subtitle={t('resetSubtitle')}>
-        <Text size="sm" className="text-muted-foreground">
-          {t('codeSentTo', { phone: `⁦${sentTo}⁩` })}
-        </Text>
-        <CodeField label={t('codeLabel')} value={code} onChangeText={setCode} />
+      <AuthLayout
+        title={t('resetTitle')}
+        // LRI…PDI keeps "+216…" in order inside Arabic text.
+        subtitle={t('codeSentTo', { phone: `\u2066${formatPhone(sentTo)}\u2069` })}
+      >
+        <CodeField labelHidden label={t('codeLabel')} value={code} onChangeText={setCode} />
         <TextField
           label={t('newPassword')}
           hint={t('passwordHint', { min: MIN_PASSWORD })}
+          icon={Lock}
+          ltr
           value={password}
           onChangeText={setPassword}
           secret
@@ -87,7 +92,7 @@ export default function ForgotPasswordScreen() {
           autoCapitalize="none"
         />
         <FormError message={error} />
-        <Button label={t('savePassword')} busy={busy} onPress={() => void reset()} />
+        <Button label={t('savePassword')} size="lg" busy={busy} onPress={() => void reset()} />
         <DevOutboxNote />
       </AuthLayout>
     );
@@ -102,9 +107,15 @@ export default function ForgotPasswordScreen() {
           setIdentifier('');
         }}
       />
-      <IdentifierField method={method} value={identifier} onChange={setIdentifier} />
+      <IdentifierField
+        method={method}
+        value={identifier}
+        onChange={setIdentifier}
+        last
+        onSubmit={() => void sendCode()}
+      />
       <FormError message={error} />
-      <Button label={t('sendCode')} busy={busy} onPress={() => void sendCode()} />
+      <Button label={t('sendCode')} size="lg" busy={busy} onPress={() => void sendCode()} />
       <DevOutboxNote />
     </AuthLayout>
   );

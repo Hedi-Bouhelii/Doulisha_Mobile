@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { SessionSync } from '@/features/auth/session';
@@ -16,6 +17,9 @@ import { ThemeProvider, useColors, useScheme } from '@/theme/theme-provider';
 
 void SplashScreen.preventAutoHideAsync();
 
+/** The tabs are always under any other screen, so "back" never leaves the app by surprise. */
+export const unstable_settings = { initialRouteName: '(tabs)' };
+
 export default function RootLayout() {
   useEffect(() => {
     ensureDirection(currentLocale());
@@ -25,12 +29,14 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <ThemeProvider>
-          <ApiProvider>
-            <SessionSync />
-            <Navigation />
-          </ApiProvider>
-        </ThemeProvider>
+        <KeyboardProvider>
+          <ThemeProvider>
+            <ApiProvider>
+              <SessionSync />
+              <Navigation />
+            </ApiProvider>
+          </ThemeProvider>
+        </KeyboardProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
@@ -40,8 +46,6 @@ function Navigation() {
   const scheme = useScheme();
   const colors = useColors();
   const arabic = useLocale() === 'ar';
-  const t = useT('Auth');
-  const tNav = useT('Nav');
   const tApp = useT('App');
 
   // Navigation bars and screen backgrounds use the Doulisha palette.
@@ -71,21 +75,19 @@ function Navigation() {
           },
           headerShadowVisible: false,
           headerBackButtonDisplayMode: 'minimal',
+          headerStyle: { backgroundColor: colors.background },
+          headerTintColor: colors.foreground,
           contentStyle: { backgroundColor: colors.background },
+          animation: 'slide_from_right',
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="sign-in" options={{ title: tNav('signIn') }} />
-        <Stack.Screen name="sign-up" options={{ title: tNav('signUp') }} />
-        <Stack.Screen name="forgot-password" options={{ title: t('resetTitle') }} />
-        <Stack.Screen
-          name="account-setup"
-          options={{ title: t('setupTitle'), headerBackVisible: false }}
-        />
-        <Stack.Screen
-          name="language"
-          options={{ title: tApp('languageTitle'), presentation: 'modal' }}
-        />
+        {/* Auth screens carry their own large title; the bar only holds "back". */}
+        <Stack.Screen name="sign-in" options={{ title: '' }} />
+        <Stack.Screen name="sign-up" options={{ title: '' }} />
+        <Stack.Screen name="forgot-password" options={{ title: '' }} />
+        <Stack.Screen name="account-setup" options={{ title: '', headerBackVisible: false }} />
+        <Stack.Screen name="language" options={{ title: tApp('languageTitle') }} />
       </Stack>
     </NavigationTheme>
   );

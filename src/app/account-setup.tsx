@@ -1,8 +1,8 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { WifiOff } from 'lucide-react-native';
-import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Lock, MapPin, UserRound, WifiOff } from 'lucide-react-native';
+import { useRef, useState } from 'react';
+import { Pressable, View, type TextInput } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -78,6 +78,7 @@ function SetupForm({
   const errorMessage = useErrorMessage();
   const cities = useQuery(trpc.catalog.cities.queryOptions());
   const complete = useMutation(trpc.account.completeSignUp.mutationOptions());
+  const queryClient = useQueryClient();
 
   const { isOrganizer, hasPassword, hasSocial } = status;
   const needsPassword = !hasPassword && !hasSocial;
@@ -86,6 +87,8 @@ function SetupForm({
   const [password, setPassword] = useState('');
   const [type, setType] = useState<AccountType>(isOrganizer ? 'organizer' : initialType);
   const [error, setError] = useState<string | null>(null);
+  const cityInput = useRef<TextInput>(null);
+  const passwordInput = useRef<TextInput>(null);
 
   const nameOk = name.trim().length >= 2;
   const passwordOk = !needsPassword || password.length >= MIN_PASSWORD;
@@ -107,6 +110,8 @@ function SetupForm({
         ...(needsPassword ? { password } : {}),
       });
       // The organizer tab appears once `me.get` shows the new role.
+      // New name and, for organizers, the new role: refresh everything that shows them.
+      await queryClient.invalidateQueries();
       router.dismissAll();
       router.replace(type === 'organizer' ? '/organizer' : '/');
     } catch (e) {
@@ -122,10 +127,14 @@ function SetupForm({
         value={name}
         onChangeText={setName}
         maxLength={80}
+        icon={UserRound}
         autoComplete="name"
         textContentType="name"
         invalid={!!error && !nameOk}
         testID="setup-name"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => cityInput.current?.focus()}
       />
       <View className="gap-2">
         <TextField
@@ -133,8 +142,13 @@ function SetupForm({
           value={city}
           onChangeText={setCity}
           maxLength={60}
+          icon={MapPin}
           autoComplete="postal-address-locality"
           testID="setup-city"
+          ref={cityInput}
+          returnKeyType={needsPassword ? 'next' : 'done'}
+          submitBehavior={needsPassword ? 'submit' : 'blurAndSubmit'}
+          onSubmitEditing={() => (needsPassword ? passwordInput.current?.focus() : undefined)}
         />
         {suggestions.length > 0 ? (
           <View className="flex-row flex-wrap gap-2">
@@ -143,7 +157,7 @@ function SetupForm({
                 key={c}
                 accessibilityRole="button"
                 onPress={() => setCity(c)}
-                className="min-h-11 justify-center rounded-full bg-secondary px-4"
+                className="min-h-11 flex-row items-center justify-center gap-1.5 rounded-full border border-border bg-card px-4 active:bg-accent"
               >
                 <Text size="sm">{c}</Text>
               </Pressable>
@@ -160,17 +174,22 @@ function SetupForm({
           secret
           showLabel={t('showPassword')}
           hideLabel={t('hidePassword')}
+          icon={Lock}
+          ltr
           autoComplete="new-password"
           textContentType="newPassword"
           autoCapitalize="none"
           invalid={!!error && !passwordOk}
           testID="setup-password"
+          ref={passwordInput}
+          returnKeyType="done"
         />
       ) : null}
       {!isOrganizer ? <AccountTypeCards value={type} onChange={setType} /> : null}
       <FormError message={error} />
       <Button
         label={type === 'organizer' && !isOrganizer ? t('continueToOrganizer') : t('finishSignUp')}
+        size="lg"
         busy={complete.isPending}
         onPress={() => void submit()}
         testID="setup-submit"

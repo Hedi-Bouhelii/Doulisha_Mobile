@@ -1,22 +1,38 @@
 import * as WebBrowser from 'expo-web-browser';
-import { CalendarPlus, Mail, Phone, Ticket, type LucideIcon } from 'lucide-react-native';
+import {
+  CalendarPlus,
+  Check,
+  ExternalLink,
+  Mail,
+  Phone,
+  Ticket,
+  type LucideIcon,
+} from 'lucide-react-native';
 import type { ReactNode } from 'react';
-import { Image, Pressable, ScrollView, View } from 'react-native';
+import { Image, Pressable, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { Button } from '@/components/ui/button';
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { TextField } from '@/components/ui/text-field';
 import { useLocale, useT } from '@/i18n';
 import { cn } from '@/lib/cn';
 import { API_URL, isDevelopment } from '@/lib/config';
-import { useColors } from '@/theme/theme-provider';
+import { useColors, useElevation } from '@/theme/theme-provider';
 
 import type { AccountType, Method } from './identifier';
 
-const symbol = require('@/assets/images/splash-icon.png') as number;
+const symbol = require('@/assets/images/symbol.png') as number;
 
-/** Every auth screen: the logo, a title, a subtitle, then the form (like the web's AuthCard). */
+/**
+ * Every auth screen: the Doulisha mark, a large title and subtitle, the form,
+ * and a footer that stays clear of the navigation bar. The page moves up with
+ * the keyboard so the field being typed in stays visible.
+ */
 export function AuthLayout({
   title,
   subtitle,
@@ -28,43 +44,75 @@ export function AuthLayout({
   children: ReactNode;
   footer?: ReactNode;
 }) {
+  const insets = useSafeAreaInsets();
+  const colors = useColors();
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="grow justify-center px-4 py-8"
+    <KeyboardAwareScrollView
+      // Scrolls the field being typed in above the keyboard (Android edge to edge).
+      bottomOffset={32}
+      style={{ flex: 1, backgroundColor: colors.background }}
+      contentContainerStyle={{
+        flexGrow: 1,
+        paddingHorizontal: 24,
+        paddingTop: 8,
+        paddingBottom: insets.bottom + 24,
+      }}
       keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
     >
-      <View className="gap-6 rounded-xl border border-border bg-card p-6">
-        <View className="items-center gap-2">
+      <Animated.View entering={FadeInDown.duration(250)} className="gap-3 pb-8">
+        <View className="h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
           <Image
             source={symbol}
-            className="h-14 w-24"
+            style={{ width: 44, height: 30 }}
             resizeMode="contain"
             accessibilityIgnoresInvertColors
           />
-          <Text
-            font="display"
-            weight="bold"
-            size="3xl"
-            className="text-center"
-            accessibilityRole="header"
-          >
-            {title}
-          </Text>
-          {subtitle ? (
-            <Text size="sm" className="text-center text-muted-foreground">
-              {subtitle}
-            </Text>
-          ) : null}
         </View>
-        {children}
-      </View>
-      {footer ? <View className="mt-5 items-center">{footer}</View> : null}
-    </ScrollView>
+        <Text font="display" weight="bold" size="4xl" accessibilityRole="header" className="pt-2">
+          {title}
+        </Text>
+        {subtitle ? <Text className="text-muted-foreground">{subtitle}</Text> : null}
+      </Animated.View>
+      <View className="gap-5">{children}</View>
+      {footer ? <View className="mt-auto items-center pt-8">{footer}</View> : null}
+    </KeyboardAwareScrollView>
   );
 }
 
-/** Phone or email, as a two-button switch. */
+/** "Already have an account? Sign in" under the form. */
+export function AuthFooter({
+  question,
+  action,
+  onPress,
+  testID,
+}: {
+  question: string;
+  action: string;
+  onPress: () => void;
+  testID?: string;
+}) {
+  return (
+    <View className="flex-row flex-wrap items-center justify-center gap-x-1">
+      <Text size="sm" className="text-muted-foreground">
+        {question}
+      </Text>
+      <Pressable
+        accessibilityRole="link"
+        onPress={onPress}
+        hitSlop={8}
+        className="min-h-11 justify-center"
+        testID={testID}
+      >
+        <Text size="sm" weight="bold" className="text-primary">
+          {action}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+/** Phone or email, as a two-segment switch. */
 export function MethodSwitch({
   value,
   onChange,
@@ -74,6 +122,7 @@ export function MethodSwitch({
 }) {
   const t = useT('Auth');
   const colors = useColors();
+  const raised = useElevation('card');
   return (
     <View
       accessibilityRole="radiogroup"
@@ -91,14 +140,16 @@ export function MethodSwitch({
             onPress={() => onChange(m)}
             testID={`method-${m}`}
             className={cn(
-              'min-h-11 flex-1 flex-row items-center justify-center gap-2 rounded-full',
+              'min-h-11 flex-1 flex-row items-center justify-center gap-2 rounded-full px-3',
               selected && 'bg-card',
             )}
+            style={selected ? raised : undefined}
           >
-            <Icon size={16} color={selected ? colors.foreground : colors.mutedForeground} />
+            <Icon size={17} color={selected ? colors.primary : colors.mutedForeground} />
             <Text
               size="sm"
-              weight="medium"
+              weight="semibold"
+              numberOfLines={1}
               className={selected ? 'text-foreground' : 'text-muted-foreground'}
             >
               {t(m === 'phone' ? 'phoneTab' : 'emailTab')}
@@ -116,17 +167,30 @@ export function IdentifierField({
   value,
   onChange,
   invalid,
+  onSubmit,
+  last = false,
 }: {
   method: Method;
   value: string;
   onChange: (value: string) => void;
   invalid?: boolean;
+  /** The keyboard's action key: the next field, or the form's main action. */
+  onSubmit?: () => void;
+  /** No field after this one: the key says "done" / "go". */
+  last?: boolean;
 }) {
   const t = useT('Auth');
+  const keyboard = {
+    returnKeyType: last ? ('go' as const) : ('next' as const),
+    submitBehavior: last ? ('blurAndSubmit' as const) : ('submit' as const),
+    onSubmitEditing: onSubmit,
+  };
   return method === 'phone' ? (
     <TextField
       label={t('phoneLabel')}
       hint={t('phoneHint')}
+      icon={Phone}
+      ltr
       value={value}
       onChangeText={onChange}
       keyboardType="phone-pad"
@@ -135,10 +199,13 @@ export function IdentifierField({
       placeholder="20 123 456"
       invalid={invalid}
       testID="phone-field"
+      {...keyboard}
     />
   ) : (
     <TextField
       label={t('emailLabel')}
+      icon={Mail}
+      ltr
       value={value}
       onChangeText={onChange}
       keyboardType="email-address"
@@ -148,6 +215,7 @@ export function IdentifierField({
       autoCorrect={false}
       invalid={invalid}
       testID="email-field"
+      {...keyboard}
     />
   );
 }
@@ -177,34 +245,52 @@ export function AccountTypeCards({
     },
   ];
   return (
-    <View className="gap-2">
-      <Text size="sm" weight="medium">
+    <View className="gap-3">
+      <Text size="sm" weight="semibold">
         {t('accountTypeLabel')}
       </Text>
-      <View accessibilityRole="radiogroup" className="flex-row gap-2">
+      <View accessibilityRole="radiogroup" className="flex-row gap-3">
         {options.map(({ type, icon: Icon, title, hint }) => {
           const selected = value === type;
           return (
-            <Pressable
+            <PressableScale
               key={type}
               accessibilityRole="radio"
               accessibilityState={{ checked: selected }}
               accessibilityLabel={`${title}. ${hint}`}
               onPress={() => onChange(type)}
               testID={`account-type-${type}`}
+              containerStyle={{ flex: 1 }}
               className={cn(
-                'flex-1 gap-1.5 rounded-lg border p-3',
-                selected ? 'border-primary bg-primary/5' : 'border-border',
+                'min-h-[148px] gap-2 rounded-xl border-[1.5px] p-4',
+                selected ? 'border-primary bg-primary/10' : 'border-border bg-card',
               )}
             >
-              <Icon size={20} color={selected ? colors.primary : colors.mutedForeground} />
-              <Text size="sm" weight="semibold">
-                {title}
-              </Text>
+              <View className="flex-row items-start justify-between">
+                <View
+                  className={cn(
+                    'h-11 w-11 items-center justify-center rounded-full',
+                    selected ? 'bg-primary' : 'bg-secondary',
+                  )}
+                >
+                  <Icon size={21} color={selected ? colors.primaryForeground : colors.primary} />
+                </View>
+                <View
+                  className={cn(
+                    'h-6 w-6 items-center justify-center rounded-full border-[1.5px]',
+                    selected ? 'border-primary bg-primary' : 'border-input',
+                  )}
+                >
+                  {selected ? (
+                    <Check size={14} color={colors.primaryForeground} strokeWidth={3} />
+                  ) : null}
+                </View>
+              </View>
+              <Text weight="bold">{title}</Text>
               <Text size="xs" className="text-muted-foreground">
                 {hint}
               </Text>
-            </Pressable>
+            </PressableScale>
           );
         })}
       </View>
@@ -245,7 +331,7 @@ function ProviderLogo({ provider }: { provider: SocialProvider }) {
   );
 }
 
-/** "Continue with Google / Facebook" below the code form (UX_GUIDELINES, ADR 0019 of the web). */
+/** "Continue with Google / Facebook" below the code form (UX_GUIDELINES, web ADR 0019). */
 export function SocialButtons({
   disabled,
   onSelect,
@@ -256,13 +342,7 @@ export function SocialButtons({
   const t = useT('Auth');
   return (
     <View className="gap-3">
-      <View className="flex-row items-center gap-3">
-        <View className="h-px flex-1 bg-border" />
-        <Text size="xs" className="text-muted-foreground">
-          {t('orContinueWith')}
-        </Text>
-        <View className="h-px flex-1 bg-border" />
-      </View>
+      <Divider label={t('orContinueWith')} />
       {(['google', 'facebook'] as const).map((provider) => (
         <Button
           key={provider}
@@ -278,20 +358,35 @@ export function SocialButtons({
   );
 }
 
+function Divider({ label }: { label: string }) {
+  return (
+    <View className="flex-row items-center gap-3 py-1">
+      <View className="h-px flex-1 bg-border" />
+      <Text size="xs" weight="medium" className="text-muted-foreground">
+        {label}
+      </Text>
+      <View className="h-px flex-1 bg-border" />
+    </View>
+  );
+}
+
 /** Development builds: codes are in the web's dev outbox, opened in the in-app browser. */
 export function DevOutboxNote() {
   const t = useT('Auth');
   const tApp = useT('App');
   const locale = useLocale();
+  const colors = useColors();
   if (!isDevelopment) return null;
   return (
-    <View className="gap-1 rounded-md border border-dashed border-border p-3">
+    <View className="gap-1 rounded-lg border border-dashed border-border px-4 py-3">
       <Text size="xs" className="text-center text-muted-foreground">
         {t('devOutbox')}
       </Text>
       <Button
         variant="link"
+        size="sm"
         label={tApp('devOutboxLink')}
+        icon={<ExternalLink size={15} color={colors.primary} />}
         onPress={() => void WebBrowser.openBrowserAsync(`${API_URL}/${locale}/dev/outbox`)}
         testID="dev-outbox"
       />
